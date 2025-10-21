@@ -1,4 +1,5 @@
-from flask_restx import Namespace
+from flask_restx import Namespace, fields
+
 
 api = Namespace('user', description='user related operations')
 
@@ -17,3 +18,20 @@ class User(db.Model):
 
     def __repr__(self):
         return "<User '{}'>".format(self.fullname)
+
+class UserDto:
+    user = api.model('user', {
+        'fullname': fields.String(required=True, description='user name'),
+        'birthdate': fields.Date(description='birth date'),
+        'email': fields.String(description='email'),
+        'phone': fields.String(description='phone')
+    })
+    user_out = api.model('user_out', {
+        'id': fields.Integer(required=True, description='user id'),
+        'created_at': fields.Date(required=True, description='user created at'),
+        'fullname': fields.String(required=True, description='user name'),
+        'birthdate': fields.Date(description='birth date'),
+        'email': fields.String(description='email'),
+        'phone': fields.String(description='phone'),
+        'picture': fields.String(description='picture')
+    })
