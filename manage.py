@@ -1,20 +1,21 @@
 import os
-#from flask_script import Manager
 import unittest
 from app import blueprint
-from app.main import create_app
+from app.main import create_app, db
 from flask import Flask
+from flask_migrate import Migrate
+from app.main.model import user
 
 app = create_app()
 app.register_blueprint(blueprint)
 
-app.app_context().push()
-#manager = Manager(app)
+migrate = Migrate(app, db)
 
 @app.cli.command("runserver")
 def runserver():
     """Run the Flask development server."""
     app.run(debug=True)
+
 
 @app.cli.command("test")
 def test():
