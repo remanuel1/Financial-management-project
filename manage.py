@@ -5,6 +5,7 @@ from app.main import create_app, db
 from flask import Flask
 from flask_migrate import Migrate
 from app.main.model import user
+from app.main.model import user_expense
 
 app = create_app()
 app.register_blueprint(blueprint)
