@@ -12,19 +12,44 @@ _user_expense_out = UserExpenseDto.user_expense_out
 @api.param('user_id', 'The User identifier')
 class UserExpenseController(Resource):
     @api.doc('list_expenses_for_user')
-    @api.marshal_list_with(_user_expense_out, envelope='data')
+    #@api.param(name='user_id', description='Filter by user ID')
+    @api.param(name='start', description='Start date (YYYY-MM-DD)')
+    @api.param(name='end', description='End date (YYYY-MM-DD)')
+    @api.param(name='store_name', description='Filter by store name')
+    @api.param(name='category', description='Filter by category')
+    @api.param(name='orderby_field', description='Field to order by')
+    @api.param(name='orderby_direction', description='Order direction')
+    @api.param(name='page', description='Page number', default=1)
+    @api.param(name='count', description='Items per page', default=50)
+    # @api.marshal_list_with(_user_expense_out, envelope='data')
     def get(self, user_id):
-        """
-        Get all expenses for a user, or by date range if query params provided.
-        Example: GET /user_expense/1/expenses?start=2025-01-01&end=2025-01-31
-        """
-        start_date = request.args.get('start')
-        end_date = request.args.get('end')
+        # Parse query parameters
+        page = request.args.get("page")
+        if page:
+            page = int(page)
+        count = request.args.get("count")
+        if count:
+            count = int(count)
 
-        if start_date and end_date:
-            return get_expenses_for_user_in_date_range(user_id, start_date, end_date)
-        else:
-            return get_all_expenses_for_user(user_id)
+        start = request.args.get("start")
+        end = request.args.get("end")
+        store_name = request.args.get("store_name")
+        category = request.args.get("category")
+
+        orderby_field = request.args.get("orderby_field")
+        orderby_direction = request.args.get("orderby_direction")
+
+        return get_all_expenses(
+            user_id=user_id,\
+            start_date=start,\
+            end_date=end,\
+            store_name=store_name,\
+            category=category,\
+            orderby_field=orderby_field,\
+            orderby_direction=orderby_direction,\
+            page=page,\
+            count=count
+        )
 
     @api.expect(_user_expense, validate=True)
     @api.response(201, 'Expense successfully created.')

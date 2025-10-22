@@ -3,6 +3,7 @@ from app.main import db
 from app.main.model.user import User
 from app.main.model.user_expense import UserExpense
 from typing import Dict, Tuple
+from app.main.util.fps import get_paginated
 
 
 def save_new_user_expense(user_id, data: Dict[str, str]) -> Tuple[Dict[str, str], int]:
@@ -45,16 +46,53 @@ def update_user_expense(id: int, data: Dict[str, str]) -> Tuple[Dict[str, str], 
         return response_object, 409
 
 
-def get_all_expenses_for_user(user_id: int):
-    return UserExpense.query.filter(UserExpense.user_id == user_id).all()
+def get_all_expenses(user_id, start_date, end_date, store_name, category,
+                     orderby_field, orderby_direction, page, count):
+    """
+    Get all user expenses with optional filters and pagination.
+    """
 
-def get_expenses_for_user_in_date_range(user_id: int, start_date: datetime, end_date: datetime):
+    fields = [
+        ("ue.id", "id"),
+        ("ue.created_at", "created_at"),
+        ("ue.user_id", "user_id"),
+        ("ue.date", "date"),
+        ("ue.store_name", "store_name"),
+        #("ue.sum", "sum"),
+        ("ue.category", "category")
+    ]
 
-    return UserExpense.query.filter(
-        UserExpense.user_id == user_id,
-        UserExpense.date >= start_date,
-        UserExpense.date <= end_date
-    ).all()
+    from_str = "FROM user_expense ue"
+
+    where_str = """WHERE (1=1)"""
+
+    if user_id is not None:
+        where_str += " AND ue.user_id = :user_id"
+        #params["user_id"] = user_id
+
+    if start_date is not None and end_date is not None:
+        where_str += " AND ue.date BETWEEN :start_date AND :end_date"
+        #params["start_date"] = start_date
+        #params["end_date"] = end_date
+
+    if store_name is not None:
+        where_str += " AND LOWER(ue.store_name) LIKE CONCAT('%', :store_name, '%')"
+        #params["store_name"] = store_name.lower()
+
+    if category is not None:
+        where_str += " AND ue.category = :category"
+        #params["category"] = category
+
+    params = {"user_id": user_id, "start_date": start_date, "end_date": end_date, "store_name": store_name, "category": category}
+
+    return get_paginated(fields=fields,
+                         from_str=from_str,
+                         where_str=where_str,
+                         orderby_field=orderby_field,
+                         orderby_direction=orderby_direction,
+                         page=page,
+                         count=count,
+                         params=params)
 
 
 def delete_user_expense(user_id: int, expense_id: int) -> Tuple[Dict[str, str], int]:
